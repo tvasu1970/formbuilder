@@ -1,0 +1,12 @@
+.markdown {
+  padding: 0 20px;
+  display: none;
+  line-height: 2; }
+
+@media (max-width: 700px) {
+  .header .company .name {
+    display: none; }
+  .header .knobs .knob {
+    display: none; }
+  .header .knobs .hamburger {
+    display: block; } }

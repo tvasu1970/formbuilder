@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)https://github.com/tvasu1970/formbuilder.git/gadget.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>form UI - Documentation - Build a Gadget</title>
+    
+
+    <meta name="viewport" content-original="width=1024" content="width=device-width, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <meta name="description" content="form UI is a UI development platform based the power of jQuery Widget Factory">
+    <meta name="author" content="formbuilder Inc.">
+
+    <link href="./gadget/common.css" rel="stylesheet">
+    <link href="./gadget/download.css" rel="stylesheet">
+    <link href="./gadget/markdown.css" rel="stylesheet">
+
+    <link rel="shortcut icon" href="https://github.com/tvasu1970/formbuilder.git/gadget/images/favicon.png">
+    <link rel="apple-touch-icon" href="https://github.com/tvasu1970/formbuilder.git/gadget/apple-touch-icon.png">
+
+    <script src="./FormUI/jquery.min.js.download"></script>
+</head>
+
+<body>
+    <div class="overlay knobs-overlay">
+        <div class="knobs">
+            <div class="knob" data-action="vscode-dark">Dark Theme</div>
+            <div class="knob" data-action="vscode-light">Light Theme</div>
+        </div>
+    </div>
+    <div class="header">
+        <div class="company">
+            <div class="logo"></div>
+            <div class="name">form UI</div>
+        </div>
+        <div class="knobs">
+            <div class="knob" data-action="vscode-dark">Dark Theme</div>
+            <div class="knob" data-action="vscode-light">Light Theme</div>
+            <div class="hamburger"></div>
+        </div>
+    </div>
+
+    <div class="markdown vscode-light" style="margin-top: 55px; display: block;">
+        <p>
+            <a href="http://https://github.com/tvasu1970/formbuilder.git/download.html">Download form UI</a> - Build a Gadget [DRAFT]</p>
+        <h1 id="build-a-gadget">Build a Gadget</h1>
+        <h2 id="about-gadgets">About Gadgets</h2>
+        <p>
+            <code>form UI platform</code> uses the
+            <code>jQuery UI Widget Factory</code> to create gadgets and widgets.
+            <br>The widget factory defines how to create and destroy widgets, get and set options, invoke methods, and listen
+            to events triggered by the widget. By using the widget factory to build your
+            <code>stateful plugins</code>, you are
+            <code>automatically conforming to a defined standard</code>, making it easier for new users to start using your plugins.
+            In addition to defining the interface, the widget factory also implements much of this functionality for you.
+            If you're not familiar with the API provided by the widget factory, you should read
+            <a href="https://learn.jquery.com/jquery-ui/how-jquery-ui-works/">How jQuery UI Works.</a>
+        </p>
+        <h3 id="review-the-following-links-below-for-documentation-">Review the following links below for documentation.</h3>
+        <blockquote>
+            <p>
+                <a href="https://api.jqueryui.com/jquery.widget/">Widget Factory</a>
+            </p>
+            <p>
+                <a href="https://learn.jquery.com/jquery-ui/widget-factory/how-to-use-the-widget-factory/">How to use the Widget Factory</a>
+            </p>
+        </blockquote>
+        <h2 id="initialize-local-dev-server">Initialize Local DEV Server</h2>
+        <p>Ensure your local development server for form UI is up and runnnig first. Run the following command</p>
+        <pre><code>$ grunt --proxy heroku
+        </code></pre>
+        <p>Now ensure we see login page for form UI
+            <a href="http://localhost:5001/login.html">locally</a>.</p>
+        <h2 id="goals">Goals</h2>
+        <p>Let's create a gadget that can load a data into predfined HTML template by making a service call.</p>
+        <ol>
+            <li>Add metadata for exampleGadget</li>
+            <li>Create an example gadget</li>
+            <li>Add _create Widget Factory method</li>
+            <li>Create a simple handlebars template</li>
+            <li>Inject markup from template into gadget</li>
+            <li>Create mock data as JSON file</li>
+            <li>Create a stub for loading data</li>
+            <li>Add metadata for REST Service</li>
+            <li>Load the mock data by making a service call</li>
+            <li>Render the data to markup</li>
+            <li>View the gadget with form UI web app</li>
+        </ol>
+        <h2 id="step-1-add-metadata-for-examplegadget">Step 1: Add metadata for exampleGadget</h2>
+        <p>Let's open /settings/gadgets.js file and add the following object that defines the behaviour of exampleGadget.
+            The gadget will be load by the platform only if it is defined here first. Notice the
+            <code>viewers</code> key - this key defines where the gadget is allowed to load. In our case we have defined it to
+            be opened only in main CONSOLE page. </p>
+        <pre><code>...
+        exampleGadget: {
+            title: 'Example',
+            viewers: [globals.CONSOLE]
+        },
+        ...
+        </code></pre>
+        <h2 id="step-2-create-an-examplegadget">Step 2: Create an exampleGadget</h2>
+        <p>Create a new directory
+            <code>/web/gadgets/exampleGadget</code>. Create a new file named exampleGadget.js in that directory and define an AMD
+            module that will return a widget constructor. Notice the naming convention. The folder and file names follow
+            the name of the gadgets, allowing platform to automatically pick them up by their pet name.</p>
+        <pre><code>...
+        define([
+            'framework/framework',
+            'css!gadgets/exampleGadget/exampleGadget'
+        ], function (
+            framework
+        ) {
+            return $.widget('form.exampleGadget', framework.baseGadget, {
+        
+                //this is where we will store some data
+                data: null,
+        
+                _create: function () { 
+                    this._super(); 
+                }
+            });
+        });
+        ...
+        </code></pre>
+        <h2 id="step-3-add-_create-widget-factory-method">Step 3: Add _create Widget Factory method</h2>
+        <p>Note that
+            <code>_create</code> is built in to the widget lifecycle, so we need to call
+            <code>this._super()</code> to make sure the inherited method runs in addition to our methods, otherwise it would override
+            it. </p>
+        <p>The
+            <code>_create</code> method gets invoked immediately any time a widget is instantiated. Here, we'll call the methods
+            we just stubbed out to get this gadget ready to use.</p>
+        <pre><code>...
+        _create: function () {
+            //this will call baseGadget's super method in turn  call widget factory's super method
+            this._super(); 
+        
+            //in this custom method we will load HTML handlebars template 
+            this._renderLayout(); 
+        
+            //in this method we will bind events to DOM elements in this gadget
+            this._bindListeners(); 
+        },
+        
+        //stub for method
+        _renderLayout: function () {},
+        
+        //stub for method
+        _bindListeners: function () {}
+        ...
+        </code></pre>
+        <h2 id="step-4-create-a-handlebars-template-and-scss-style-file">Step 4: Create a handlebars template and SCSS style file</h2>
+        <p>Let's create a Handlebars template for your Gadget. In your exampleGadget directory. Create a file called
+            <code>exampleGadget.hbs</code> and paste the following code:</p>
+        <pre><code>...
+        &lt;div class="container"&gt;
+            &lt;div class="controls"&gt;
+                &lt;div class="controls-bar"&gt;
+                    &lt;div class="message"&gt;
+                        Demostrates simple workflow with live updates
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class="content"&gt;
+                &lt;div class="address"&gt;
+                    &lt;div class="fname"&gt;&lt;/div&gt;
+                    &lt;div class="lname"&gt;&lt;/div&gt;
+                    &lt;div class="city"&gt;&lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        ...
+        </code></pre>
+        <p>This template defines a control bar and a content region. </p>
+        <p>Handlebars compiles all .hbs files in the web/ directory into functions that accept a data parameter and return a
+            string of HTML. These functions are stored on the global
+            <code>HBS</code> object under property names matching the template file path relative to web/. The templates are recompiled
+            by a grunt watch task that runs as long as the grunt server task is running. To compile manually, open a new
+            terminal and run:</p>
+        <pre><code>$ grunt handlebars
+        </code></pre>
+        <p>Additionally let's create a SCSS file to manage styles for this gadget. Create a file called
+            <code>exampleGadget.scss</code> and paste the following code:</p>
+        <pre><code>...
+        .gadget {
+            &amp;.exampleGadget {
+                .container {
+                    overflow: hidden;
+                }
+                .controls {
+                    padding: 0;
+                    .message {
+                        color: var(--theme-color);
+                        line-height: 22px;
+                    }
+                    .controls-bar {
+                        justify-content: space-between;
+                        flex-wrap: wrap;
+                        &amp;:first-of-type {
+                            display: flex;
+                            border-bottom: 1px solid #ccc;
+                            padding: 5px;
+                        }
+                    }
+                }
+                .content {
+                    flex: 1;
+                    border-top: 1px solid #aaa;
+                    padding: 10px 0 10px 10px;
+                    overflow: auto;
+                    .address {
+                        div {
+                            padding: 5px;
+                            background-color: #ccc;
+                            display: inline-block;
+                        }
+                    }
+                }
+            }
+        }
+        ...
+        </code></pre>
+        <p>SCSS file will get a corresponding CSS file.</p>
+        <h2 id="step-5-inject-markup-from-template-into-gadget">Step 5: Inject markup from template into gadget</h2>
+        <p>Now we can implement
+            <code>_renderLayout</code> using the template. Every widget gets a reference to its jQuery-wrapped element as
+            <code>this.element</code>, so updating the element with the template is simple.</p>
+        <pre><code>...
+        _renderLayout: function () {
+            var strTemplate = HBS['gadgets/exampleGadget/exampleGadget']();
+        
+            this.element.html(strTemplate);
+        },
+        ...
+        </code></pre>
+        <p>We should have a gadget that can be viewed
+            <a href="http://localhost:5001/harness.html#exampleGadget">locally</a>.</p>
+        <h2 id="step-6-create-mock-data-as-json-file">Step 6: Create mock data as JSON file</h2>
+        <p>Let's create a file named exampleGadget_data.json and add the following JSON content. We will load this in lieu
+            of a real REST service call using serviceManager API in the next steps. </p>
+        <pre><code>...
+        {
+            "data": {
+                "fname": "John",
+                "lname": "Doe",
+                "city": "New York"
+            }
+        }
+        ...
+        </code></pre>
+        <h2 id="step-7-create-a-stub-for-loading-data">Step 7: Create a stub for loading data</h2>
+        <p>We will add a call to
+            <code>_loadData</code> method in
+            <code>_create</code> method. Let's add the stub method which we will define in next step.</p>
+        <pre><code>...
+        _create: function () {
+        
+            ...
+            this._loadData();
+        },
+        ...
+        </code></pre>
+        <h2 id="step-8-add-metadata-for-rest-service">Step 8: Add metadata for REST Service</h2>
+        <p>Let's open /settings/services.js file and add the following object that defines the structure of REST Service
+            call.</p>
+        <pre><code>...
+        exampleGadget: {
+            get: 'gadgets/exampleGadget/exampleGadget_data.json'
+        },
+        ...
+        </code></pre>
+        <h2 id="step-9-load-the-mock-data-by-making-a-service-call">Step 9: Load the mock data by making a service call</h2>
+        <p>Let's create
+            <code>_loadData</code> method, and add serviceManager API to make an Ajax call to get data. Notice the success and
+            error responses.</p>
+        <pre><code>...
+        _loadData: function () {
+            var context = this;
+        
+             function success(response) {
+                response = (typeof response === 'string') ? JSON.parse(response) : response;
+                context.data = (response &amp;&amp; response.data) ? response.data : [];
+            }
+        
+            function error(response) {
+                //handle errors here
+            }
+        
+            framework.serviceManager.exec({
+                service: 'exampleGadget.get',
+                success: success,
+                error: error
+            });
+        }
+        ...
+        </code></pre>
+        <h2 id="step-10-render-the-data-to-markup">Step 10: Render the data to markup</h2>
+        <p>Let's create
+            <code>_renderData</code> method which will use the data recieved and render within HTLM markup. Update the _loadData
+            method and call this new method. We will define in the next step.</p>
+        <pre><code>...
+        _loadData: function () {
+            var context = this;
+        
+            function success(response) {
+                response = (typeof response === 'string') ? JSON.parse(response) : response;
+                context.data = (response &amp;&amp; response.data) ? response.data : [];
+                context._renderData();
+            }
+        
+            //let's load values from data into DOM elements
+            _renderData: function () {
+                var $address = this.element.find('.content .address');
+                $address.find('.fname').html(this.data.fname);
+                $address.find('.lname').html(this.data.lname);
+                $address.find('.city').html(this.data.city);
+            }
+        }
+        ...
+        </code></pre>
+        <p>We should have a gadget that now fetches data as a REST Service and renders within the gadget. let's view
+            <a href="http://localhost:5001/harness.html#gadget=exampleGadget">locally</a>.</p>
+        <h2 id="step-11-view-the-gadget-with-form-ui-web-app">Step 11: View the gadget with form UI web app</h2>
+        <p> Now that we know the gadget loads well within developer harness, it's time to experience the gadget with form
+            UI. </p>
+        <p> Stop and restart local DEV server </p>
+        <pre><code> $ grunt --proxy heroku
+        </code></pre>
+        <p>Let's launch the
+            <a href="http://localhost:5001/login.html">form UI</a> and load the gadget by accessing this new gadget from gadgets menu.</p>
+
+    </div>
+
+    <script src="./gadget/common.js.download"></script>
+
+
+</body></html>

@@ -1,0 +1,63 @@
+$(document).off('dblclick');
+$(document).on('dblclick', function () {
+    document.fullscreenEnabled = document.fullscreenEnabled || document.mozFullScreenEnabled ||
+        document.documentElement.webkitRequestFullScreen;
+
+    function requestFullscreen(element) {
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.mozRequestFullScreen) {
+            element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullScreen) {
+            element.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+        }
+    }
+
+    if (document.fullscreenEnabled) {
+        requestFullscreen(document.documentElement);
+    }
+});
+
+$('.overlay .knobs, .header .knobs').off('click', '.knob');
+$('.overlay .knobs, .header .knobs').on('click', '.knob', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var action = $(this).attr('data-action');
+    $('.knobs-overlay').hide(100);
+    if (window.localStorage) {
+        window.localStorage.setItem('form-theme', action);
+        setTheme(action);
+    }
+});
+
+function setTheme(theme) {
+    $('.markdown').removeClass('vscode-light vscode-dark').addClass(theme);
+}
+
+$('.knobs').off('click', '.hamburger');
+$('.knobs').on('click', '.hamburger', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('.knobs-overlay').show(100);
+    $('.knobs-overlay .knobs').show(100);
+});
+
+$('.logo').off('click');
+$('.logo').on('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+});
+
+$(function () {
+    //load time;
+    var theme = 'vscode-dark';
+    if (window.localStorage) {
+        theme = window.localStorage.getItem('form-theme') || theme;
+    }
+    setTheme(theme);
+    var topMargin = $('.header').outerHeight();
+    $('.markdown').css({
+        'margin-top': topMargin
+    });
+    $('.markdown').show();
+});
